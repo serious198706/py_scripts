@@ -69,25 +69,23 @@ def start_craw(url):
     return agent_list
 
 
-def craw_book(type, book_name, max_page):
-    local_name = f'./{book_name}.xls'
-
-    if not os.path.isfile(local_name) or not os.access(local_name, os.R_OK):
+def craw_book(register_type, book_name, from_page, to_page):
+    if not os.path.isfile(book_name) or not os.access(book_name, os.R_OK):
         info = collections.OrderedDict({'代理商名称':'', '经营范围':'', '热门业务':'', '联系人':'', '商家地址':''})
         sheet = pyexcel.get_sheet(adict=info)
-        sheet.save_as(local_name)
+        sheet.save_as(book_name)
 
-    sheet = pyexcel.get_sheet(file_name=local_name)
+    sheet = pyexcel.get_sheet(file_name=book_name)
 
-    for page in range(1, max_page):
+    for page in range(from_page, to_page + 1):
         print(f'processing page {page}...', end='')
-        url = f'http://b.zol.com.cn/qy/all/list_51_0_0_{page}.html?curFloor=1&searchKey=&authType=&registerType={type}'
+        url = f'http://b.zol.com.cn/qy/all/list_51_0_0_{page}.html?curFloor=1&searchKey=&authType=&registerType={register_type}'
         info_list = start_craw(url)
 
         for info in info_list:
             sheet.row += [info['代理商名称'], info['经营范围'], info['热门业务'], info['联系人'], info['商家地址']]
 
-        sheet.save_as(local_name)
+        sheet.save_as(book_name)
         print('done')
 
         time.sleep(8)
@@ -95,11 +93,19 @@ def craw_book(type, book_name, max_page):
 
 if __name__ == "__main__":
     print('开始渠道商')
-    craw_book('1', '渠道商', 147)
+    craw_book('1', '渠道商.xlsx', 1, 147)
     print('渠道商结束')
     print('开始制造商')
-    craw_book('2', '制造商', 1)
+    craw_book('2', '制造商.xlsx', 1, 1)
     print('制造商结束')
     print('开始服务商')
-    craw_book('3', '服务商', 47)
+    craw_book('3', '服务商.xlsx', 1, 47)
     print('服务商结束')
+
+    book1 = pyexcel.get_book(file_name='渠道商.xlsx')
+    book2 = pyexcel.get_book(file_name='制造商.xlsx')
+    book3 = pyexcel.get_book(file_name='服务商.xlsx')
+
+    book = book1 + book2 + book3
+
+    book.save_as('商.xls')
